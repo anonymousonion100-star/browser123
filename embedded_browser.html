@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Browser</title>
+<style>
+  :root {
+    --bg-void: #0b0e14;
+    --bg-panel: #12161f;
+    --bg-tab-active: #12161f;
+    --bg-tab: #1a1f2b;
+    --line: #232937;
+    --text-hi: #e7eaf1;
+    --text-lo: #6b7385;
+    --accent: #5eead4;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg-void);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: var(--text-hi);
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .navbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg-tab-active);
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    color: var(--text-lo);
+    font-size: 15px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+  }
+  .nav-btn:hover { background: var(--bg-tab); color: var(--text-hi); }
+  .addressbar {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-void);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 9px 16px;
+  }
+  .addressbar .lock { color: var(--accent); font-size: 12px; }
+  .addressbar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-hi);
+    font-size: 13px;
+  }
+  .addressbar input::placeholder { color: var(--text-lo); }
+  .addressbar .go-badge {
+    font-size: 11px;
+    color: var(--bg-void);
+    background: var(--accent);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .viewport {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .home {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(94,234,212,0.06), transparent 40%),
+      var(--bg-void);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 20px;
+    text-align: center;
+  }
+  .home.hidden { display: none; }
+  .logo { font-size: 46px; font-weight: 700; letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+  .home p {
+    color: var(--text-lo);
+    font-size: 13px;
+    max-width: 380px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .search-main {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 13px 20px;
+    margin-top: 6px;
+  }
+  .search-main input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-hi);
+    font-size: 14px;
+  }
+  .search-main input::placeholder { color: var(--text-lo); }
+  .search-main .go {
+    font-size: 12px;
+    color: var(--bg-void);
+    background: var(--accent);
+    padding: 7px 16px;
+    border-radius: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  #resultsFrame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #fff;
+    display: none;
+  }
+  #resultsFrame.visible { display: block; }
+
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: var(--text-lo);
+    border-top: 1px solid var(--line);
+    background: var(--bg-tab);
+    flex-shrink: 0;
+  }
+  .statusbar .dot-live {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    margin-right: 6px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="navbar">
+    <button class="nav-btn" id="homeBtn" title="Home">&#8962;</button>
+    <button class="nav-btn" id="reloadBtn" title="Reload">&#8635;</button>
+    <div class="addressbar">
+      <span class="lock">&#128274;</span>
+      <input type="text" id="addressInput" placeholder="Search DuckDuckGo or type a URL">
+      <span class="go-badge" id="addressGo">Go</span>
+    </div>
+  </div>
+
+  <div class="viewport">
+    <div class="home" id="homeView">
+      <div class="logo">my<span>browser</span></div>
+      <p>Search below — results load in an embedded frame, right inside this page.</p>
+      <div class="search-main">
+        <input type="text" id="mainSearchInput" placeholder="Search DuckDuckGo or type a URL">
+        <div class="go" id="mainSearchGo">Go</div>
+      </div>
+    </div>
+    <iframe id="resultsFrame" title="Search results"></iframe>
+  </div>
+
+  <div class="statusbar">
+    <div><span class="dot-live"></span><span id="statusText">Ready</span></div>
+    <div>my browser</div>
+  </div>
+
+<script>
+  function looksLikeUrl(value) {
+    const v = value.trim();
+    if (/^https?:\/\//i.test(v)) return true;
+    return /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(v);
+  }
+
+  const homeView = document.getElementById('homeView');
+  const resultsFrame = document.getElementById('resultsFrame');
+  const addressInput = document.getElementById('addressInput');
+  const statusText = document.getElementById('statusText');
+
+  function go(value) {
+    const v = value.trim();
+    if (!v) return;
+
+    let url;
+    if (looksLikeUrl(v)) {
+      url = /^https?:\/\//i.test(v) ? v : 'https://' + v;
+    } else {
+      // DuckDuckGo's HTML results page — one of the few major engines that allows embedding
+      url = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(v);
+    }
+
+    addressInput.value = url;
+    statusText.textContent = 'Loading ' + url + ' ...';
+    homeView.classList.add('hidden');
+    resultsFrame.classList.add('visible');
+    resultsFrame.src = url;
+  }
+
+  resultsFrame.addEventListener('load', () => {
+    statusText.textContent = 'Loaded';
+  });
+
+  document.getElementById('addressGo').addEventListener('click', () => go(addressInput.value));
+  addressInput.addEventListener('keydown', e => { if (e.key === 'Enter') go(addressInput.value); });
+
+  document.getElementById('mainSearchGo').addEventListener('click', () => {
+    go(document.getElementById('mainSearchInput').value);
+  });
+  document.getElementById('mainSearchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') go(e.target.value);
+  });
+
+  document.getElementById('homeBtn').addEventListener('click', () => {
+    homeView.classList.remove('hidden');
+    resultsFrame.classList.remove('visible');
+    resultsFrame.src = 'about:blank';
+    addressInput.value = '';
+    statusText.textContent = 'Ready';
+  });
+
+  document.getElementById('reloadBtn').addEventListener('click', () => {
+    if (resultsFrame.src && resultsFrame.src !== 'about:blank') {
+      resultsFrame.src = resultsFrame.src;
+    }
+  });
+</script>
+
+</body>
+</html>
